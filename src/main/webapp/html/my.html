@@ -1,11 +1,62 @@
-<html>
+<html lang="en">
 <head>
     <title>RPG</title>
     <script src=https://code.jquery.com/jquery-3.6.0.min.js></script>
-    <link href="/css/my.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/my.css" >
 </head>
 <body>
 <h1>RPG admin panel</h1>
+<table id="main-table">
+    <thead>
+        <tr>
+            <th>#</th>
+            <th>Name</th>
+            <th>Title</th>
+            <th>Race</th>
+            <th>Profession</th>
+            <th>Level</th>
+            <th>Birthday</th>
+            <th>Banned</th>
+        </tr>
+    </thead>
+    <tbody>
+
+    </tbody>
+
+    <script>
+        function loadPlayers() {
+            $.get('/rest/players')
+                .done(function(players) {
+                    const $tbody = $('#main-table tbody');
+                    $tbody.empty(); // Очищаем таблицу
+
+                    players.forEach(function(player, index) {
+                        const row = `
+                            <tr>
+                                <td>${index + 1}</td>
+                                <td>${player.name || ''}</td>
+                                <td>${player.title || ''}</td>
+                                <td>${player.race || ''}</td>
+                                <td>${player.profession || ''}</td>
+                                <td>${player.level || ''}</td>
+                                <td>${new Date(player.birthday).toLocaleDateString() || ''}</td>
+                                <td>${player.banned ? 'Да' : 'Нет'}</td>
+                            </tr>
+                        `;
+                        $tbody.append(row);
+                    });
+                })
+                .fail(function(jqXHR, textStatus, errorThrown) {
+                    console.error('Ошибка при загрузке игроков:', textStatus, errorThrown);
+                    alert('Не удалось загрузить данные с сервера.');
+                });
+        }
+
+        $(document).ready(function() {
+            loadPlayers();
+        });
+    </script>
+</table>
 
 </body>
 </html>
