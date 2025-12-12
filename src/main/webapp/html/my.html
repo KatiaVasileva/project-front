@@ -6,6 +6,7 @@
 </head>
 <body>
 <h1>RPG admin panel</h1>
+<h2>Accounts List</h2>
 <table id="main-table">
     <thead>
         <tr>
@@ -24,6 +25,17 @@
     </tbody>
 
     <script>
+        /**
+         * @typedef {Object} Player
+         * @property {number} id
+         * @property {string} name
+         * @property {string} title
+         * @property {string} race
+         * @property {string} profession
+         * @property {number} birthday
+         * @property {boolean} banned
+         * @property {number} level
+         */
         function loadPlayers() {
             $.get('/rest/players')
                 .done(function(players) {
@@ -34,13 +46,13 @@
                         const row = `
                             <tr>
                                 <td>${index + 1}</td>
-                                <td>${player.name || ''}</td>
-                                <td>${player.title || ''}</td>
-                                <td>${player.race || ''}</td>
-                                <td>${player.profession || ''}</td>
-                                <td>${player.level || ''}</td>
-                                <td>${new Date(player.birthday).toLocaleDateString() || ''}</td>
-                                <td>${player.banned ? 'Да' : 'Нет'}</td>
+                                <td>${player.name}</td>
+                                <td>${player.title}</td>
+                                <td>${player.race}</td>
+                                <td>${player.profession}</td>
+                                <td>${player.level}</td>
+                                <td>${new Date(player.birthday).toLocaleDateString()}</td>
+                                <td>${player.banned ? 'Yes' : 'No'}</td>
                             </tr>
                         `;
                         $tbody.append(row);
