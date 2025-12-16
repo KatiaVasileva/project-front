@@ -29,6 +29,8 @@
         <th>Level</th>
         <th>Birthday</th>
         <th>Banned</th>
+        <th>Edit</th>
+        <th>Delete</th>
     </tr>
     </thead>
     <tbody>
@@ -55,25 +57,36 @@
      * @property {number} level
      */
     function loadPlayers(pageNumber, pageSize) {
-        $.get('/rest/players', {pageNumber: pageNumber, pageSize})
+        $.get('/rest/players', {pageNumber: pageNumber, pageSize: pageSize})
             .done(function (players) {
                 const $tbody = $('#main-table tbody');
                 $tbody.empty();
 
+                if(players.length === 0) {
+                    $tbody.append('<tr><td colspan="10">Нет игроков</td></tr>');
+                    return;
+                }
+
                 players.forEach(function (player, index) {
-                    const row = `
-                            <tr>
-                                <td>${index + 1 + (pageNumber * pageSize)}</td>
-                                <td>${player.name}</td>
-                                <td>${player.title}</td>
-                                <td>${player.race}</td>
-                                <td>${player.profession}</td>
-                                <td>${player.level}</td>
-                                <td>${new Date(player.birthday).toLocaleDateString()}</td>
-                                <td>${player.banned ? 'Yes' : 'No'}</td>
-                            </tr>
-                        `;
-                    $tbody.append(row);
+                    const $tr = $('<tr>');
+                    $tr.append($('<td>').text(index + 1 + (pageNumber * pageSize)));
+                    $tr.append($('<td>').text(player.name));
+                    $tr.append($('<td>').text(player.title));
+                    $tr.append($('<td>').text(player.race));
+                    $tr.append($('<td>').text(player.profession));
+                    $tr.append($('<td>').text(player.level));
+                    $tr.append($('<td>').text(new Date(player.birthday).toLocaleDateString()));
+                    $tr.append($('<td>').text(player.banned ? 'Yes' : 'No'));
+
+                    const $editBtn = $('<td>').addClass('table-img');
+                    $editBtn.append($('<img alt="edit" src="/img/edit.png">'));
+                    $tr.append($editBtn);
+
+                    const $deleteBtn = $('<td>').addClass('table-img');
+                    $deleteBtn.append($('<img alt="delete" src="/img/delete.png">'));
+                    $tr.append($deleteBtn);
+
+                    $tbody.append($tr);
                 });
             })
             .fail(function (jqXHR, textStatus, errorThrown) {

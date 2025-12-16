@@ -36,8 +36,12 @@ th {
     background-color: #f2f2f2;
 }
 
-tr:nth-child(even) {
-    background-color: #f9f9f9;
+/*tr:nth-child(even) {*/
+/*    background-color: #f9f9f9;*/
+/*}*/
+
+.table-img {
+    text-align: center;
 }
 
 .pgn-container {
@@ -63,4 +67,5 @@ tr:nth-child(even) {
 .page-btn.active {
     background-color: #f2f2f2;
     font-weight: bold;
+    color: darkred;
 }
