@@ -2,50 +2,67 @@
 <head>
     <title>RPG</title>
     <script src=https://code.jquery.com/jquery-3.6.0.min.js></script>
-    <link rel="stylesheet" href="/css/my.css" >
+    <link rel="stylesheet" href="/css/my.css">
 </head>
 <body>
 <h1>RPG admin panel</h1>
 <h2>Accounts List</h2>
+<div class="select-container">
+    <label for="items-per-page" style="margin-right: 10px">Count per page:</label>
+    <select id="items-per-page">
+        <option value="3">3</option>
+        <option value="5">5</option>
+        <option value="10">10</option>
+        <option value="20">20</option>
+    </select>
+</div>
+
 <table id="main-table">
     <thead>
-        <tr>
-            <th>#</th>
-            <th>Name</th>
-            <th>Title</th>
-            <th>Race</th>
-            <th>Profession</th>
-            <th>Level</th>
-            <th>Birthday</th>
-            <th>Banned</th>
-        </tr>
+    <tr>
+        <th>#</th>
+        <th>Name</th>
+        <th>Title</th>
+        <th>Race</th>
+        <th>Profession</th>
+        <th>Level</th>
+        <th>Birthday</th>
+        <th>Banned</th>
+    </tr>
     </thead>
     <tbody>
 
     </tbody>
+</table>
 
-    <script>
-        /**
-         * @typedef {Object} Player
-         * @property {number} id
-         * @property {string} name
-         * @property {string} title
-         * @property {string} race
-         * @property {string} profession
-         * @property {number} birthday
-         * @property {boolean} banned
-         * @property {number} level
-         */
-        function loadPlayers() {
-            $.get('/rest/players')
-                .done(function(players) {
-                    const $tbody = $('#main-table tbody');
-                    $tbody.empty(); // Очищаем таблицу
+<div class="pgn-container" style="display: flex; flex-direction: row; align-items: center">
+    <p style="margin-right: 10px;"> Pages:</p>
+    <div id="pagination">
+    </div>
+</div>
 
-                    players.forEach(function(player, index) {
-                        const row = `
+<script>
+    /**
+     * @typedef {Object} Player
+     * @property {number} id
+     * @property {string} name
+     * @property {string} title
+     * @property {string} race
+     * @property {string} profession
+     * @property {string} birthday
+     * @property {boolean} banned
+     * @property {number} level
+     */
+    function loadPlayers(pageNumber, pageSize) {
+        $.get('/rest/players', {pageNumber: pageNumber, pageSize})
+            .done(function (players) {
+                const $tbody = $('#main-table tbody');
+                $tbody.empty();
+
+                players.forEach(function (player, index) {
+                    const row = `
                             <tr>
-                                <td>${index + 1}</td>
+                                <td>${index + 1 + (pageNumber * pageSize)}</td>
                                 <td>${player.name}</td>
                                 <td>${player.title}</td>
                                 <td>${player.race}</td>
@@ -55,20 +72,65 @@
                                 <td>${player.banned ? 'Yes' : 'No'}</td>
                             </tr>
                         `;
-                        $tbody.append(row);
-                    });
-                })
-                .fail(function(jqXHR, textStatus, errorThrown) {
-                    console.error('Ошибка при загрузке игроков:', textStatus, errorThrown);
-                    alert('Не удалось загрузить данные с сервера.');
+                    $tbody.append(row);
                 });
-        }
+            })
+            .fail(function (jqXHR, textStatus, errorThrown) {
+                console.error('Ошибка при загрузке игроков:', textStatus, errorThrown);
+                alert('Не удалось загрузить данные с сервера.');
+            });
+    }
 
-        $(document).ready(function() {
-            loadPlayers();
-        });
-    </script>
-</table>
+    $(document).ready(function () {
+        const initialPageSize = 3;
+        loadPlayers(0, initialPageSize);
+        renderPagination(1, initialPageSize);
+        $('#items-per-page').val(initialPageSize);
+    });
+
+    function getTotalCount() {
+        return $.get('rest/players/count')
+            .then(function (count) {
+                return count;
+            })
+            .fail(function (jqXHR, textStatus, errorThrown) {
+                console.error('Error when getting total number of accounts', textStatus, errorThrown);
+                alert('Failed to get total number of accounts');
+                return 0;
+            });
+    }
+
+    function renderPagination(currentPage, pageSize) {
+        getTotalCount().then(function (totalCount) {
+            const totalPages = Math.ceil(totalCount / pageSize);
+            const $pagination = $('#pagination');
+            $pagination.empty();
+
+            for (let i = 1; i <= totalPages; i++) {
+                const button = `<button class="page-btn" data-page="${i}">${i}</button>`;
+                $pagination.append(button);
+            }
+
+            $('.page-btn[data-page="' + currentPage + '"]').addClass('active');
+
+            $('.page-btn').click(function () {
+                const page = $(this).data('page');
+                loadPlayers(page - 1, pageSize);
+                $('.page-btn').removeClass('active');
+                $(this).addClass('active');
+            })
+        })
+    }
+
+    $('#items-per-page').change(function () {
+        const pageSize = $(this).val();
+        loadPlayers(0, pageSize);
+        renderPagination(1, pageSize);
+    })
+
+
+</script>
+
 
 </body>
 </html>
