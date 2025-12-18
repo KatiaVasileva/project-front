@@ -67,9 +67,9 @@
                     return;
                 }
 
-                players.forEach(function (player, index) {
+                players.forEach(function (player) {
                     const $tr = $('<tr>');
-                    $tr.append($('<td>').text(index + 1 + (pageNumber * pageSize)));
+                    $tr.append($('<td>').text(player.id));
                     $tr.append($('<td>').text(player.name));
                     $tr.append($('<td>').text(player.title));
                     $tr.append($('<td>').text(player.race));
@@ -79,19 +79,36 @@
                     $tr.append($('<td>').text(player.banned ? 'Yes' : 'No'));
 
                     const $editBtn = $('<td>').addClass('table-img');
-                    $editBtn.append($('<img alt="edit" src="/img/edit.png">'));
+                    $editBtn.append($('<img>').attr({
+                        src: '/img/edit.png',
+                        alt: 'edit',
+                        class: 'icon edit-icon',
+                        'data-player-id': player.id,
+                        'data-action': 'edit'
+                    }));
                     $tr.append($editBtn);
 
                     const $deleteBtn = $('<td>').addClass('table-img');
-                    $deleteBtn.append($('<img alt="delete" src="/img/delete.png">'));
+                    $deleteBtn.append($('<img>').attr({
+                        src: '/img/delete.png',
+                        alt: 'delete',
+                        class: 'icon delete-icon',
+                        'data-player-id': player.id,
+                        'data-action': 'delete'
+                    }));
                     $tr.append($deleteBtn);
 
                     $tbody.append($tr);
                 });
+
+                $('.delete-icon').click(function () {
+                    const playerId = $(this).data('player-id');
+                    deletePlayer(playerId, pageNumber, pageSize);
+                })
             })
             .fail(function (jqXHR, textStatus, errorThrown) {
-                console.error('Ошибка при загрузке игроков:', textStatus, errorThrown);
-                alert('Не удалось загрузить данные с сервера.');
+                console.error('Error when loading players:', textStatus, errorThrown);
+                alert('Failed to load data from server.');
             });
     }
 
@@ -141,6 +158,22 @@
         loadPlayers(0, pageSize);
         renderPagination(1, pageSize);
     })
+
+    function deletePlayer(playerId, pageNumber, pageSize) {
+        $.ajax({
+            url: `/rest/players/${playerId}`,
+            type: 'DELETE',
+            success: function () {
+                console.log(`Player ID = ${playerId} is deleted`);
+                loadPlayers(pageNumber, pageSize);
+                renderPagination(pageNumber, pageSize);
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+                console.error('Error when deleting player: ', textStatus, errorThrown);
+                alert('Failed to delete the player.');
+            }
+        })
+    }
 
 
 </script>

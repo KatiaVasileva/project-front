@@ -44,6 +44,14 @@ th {
     text-align: center;
 }
 
+.delete-icon {
+    cursor: pointer;
+}
+
+.delete-icon:hover {
+    opacity: 0.3;
+}
+
 .pgn-container {
     display: flex;
     flex-direction: row;
