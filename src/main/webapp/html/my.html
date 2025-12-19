@@ -49,6 +49,9 @@
     let currentPageSize = 3;
     let currentTotalPages = 0;
 
+    const RACES = ['HUMAN','DWARF','ELF','GIANT','ORC','TROLL','HOBBIT'];
+    const PROFESSIONS = ['WARRIOR','ROGUE','SORCERER','CLERIC','PALADIN','NAZGUL','WARLOCK','DRUID'];
+
     /**
      * @typedef {Object} Player
      * @property {number} id
@@ -69,13 +72,13 @@
                 const $tbody = $('#main-table tbody');
                 $tbody.empty();
 
-                if(players.length === 0) {
+                if (players.length === 0) {
                     $tbody.append('<tr><td colspan="10">Нет игроков</td></tr>');
                     return;
                 }
 
                 players.forEach(function (player) {
-                    const $tr = $('<tr>');
+                    const $tr = $('<tr>').attr('id', `player-${player.id}`);
                     $tr.append($('<td>').text(player.id));
                     $tr.append($('<td>').text(player.name));
                     $tr.append($('<td>').text(player.title));
@@ -114,7 +117,19 @@
             });
     }
 
-    $('#main-table').on('click', '.delete-icon', function () {
+    $('#main-table')
+        .on('click', '.edit-icon', function () {
+            const $btn = $(this);
+            const $row = $btn.closest('tr');
+            const action = $btn.data('action');
+
+            if (action === 'edit') {
+                enableEditMode($row);
+            } else if (action === 'save') {
+                savePlayer($row);
+            }
+        })
+        .on('click', '.delete-icon', function () {
         const playerId = $(this).data('player-id');
         deletePlayer(playerId, currentPage);
     })
@@ -169,6 +184,30 @@
         })
     }
 
+    function savePlayer($row) {
+        const id = $row.attr('id').split('-')[1];
+
+        const updatedPlayer = {
+            id,
+            name: $row.find('td:eq(1) input').val(),
+            title: $row.find('td:eq(2) input').val(),
+            race: $row.find('td:eq(3) select').val(),
+            profession: $row.find('td:eq(4) select').val(),
+            banned: $row.find('td:eq(7) select').val() === 'true'
+        };
+
+        $.ajax({
+            url: `/rest/players/${id}`,
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(updatedPlayer),
+            success: function () {
+                console.log(`Player ID=${id} is updated`);
+                loadPlayers(currentPage, currentPageSize)
+            }
+        });
+    }
+
     function deletePlayer(playerId) {
         $.ajax({
             url: `/rest/players/${playerId}`,
@@ -189,6 +228,41 @@
                 alert('Failed to delete the player.');
             }
         })
+    }
+
+    function enableEditMode($row) {
+        if ($row.data('editing')) return;
+
+        $row.data('editing', true);
+        $row.find('.delete-icon').hide();
+
+        const $btn = $row.find('.edit-icon');
+        $btn
+            .attr('src', '/img/save.png')
+            .attr('alt', 'save')
+            .data('action', 'save');
+
+        $row.find('td:eq(1)').html(`<input value="${$row.find('td:eq(1)').text()}">`);
+        $row.find('td:eq(2)').html(`<input value="${$row.find('td:eq(2)').text()}">`);
+
+        $row.find('td:eq(3)').html(makeSelect(RACES, $row.find('td:eq(3)').text()));
+        $row.find('td:eq(4)').html(makeSelect(PROFESSIONS, $row.find('td:eq(4)').text()));
+
+        const banned = $row.find('td:eq(7)').text() === 'Yes';
+        $row.find('td:eq(7)').html(`
+        <select>
+            <option value="false" ${!banned ? 'selected' : ''}>No</option>
+            <option value="true" ${banned ? 'selected' : ''}>Yes</option>
+        </select>`);
+    }
+
+    function makeSelect(options, selected) {
+        return `
+        <select>
+            ${options.map(o =>
+            `<option ${o === selected ? 'selected' : ''}>${o}</option>`
+        ).join('')}
+        </select>`;
     }
 
 </script>

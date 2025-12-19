@@ -44,11 +44,15 @@ th {
     text-align: center;
 }
 
-.delete-icon {
+.delete-icon,
+.edit-icon,
+.save-icon {
     cursor: pointer;
 }
 
-.delete-icon:hover {
+.delete-icon:hover,
+.edit-icon:hover,
+.save-icon:hover {
     opacity: 0.3;
 }
 
