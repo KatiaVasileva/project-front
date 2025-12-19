@@ -47,6 +47,7 @@
 <script>
     let currentPage = 0;
     let currentPageSize = 3;
+    let currentTotalPages = 0;
 
     /**
      * @typedef {Object} Player
@@ -115,7 +116,7 @@
 
     $('#main-table').on('click', '.delete-icon', function () {
         const playerId = $(this).data('player-id');
-        deletePlayer(playerId);
+        deletePlayer(playerId, currentPage);
     })
 
     $(document).ready(function () {
@@ -147,6 +148,7 @@
     function renderPagination(pageSize) {
         getTotalCount().then(function (totalCount) {
             const totalPages = Math.ceil(totalCount / pageSize);
+            currentTotalPages = totalPages;
             const $pagination = $('#pgn');
             $pagination.empty();
 
@@ -156,7 +158,7 @@
                 $pagination.append(button);
             }
 
-            $('.page-btn[data-page="' + currentPage + '"]').addClass('active');
+            $('.page-btn[data-page="' + (currentPage + 1) + '"]').addClass('active');
 
             $('.page-btn').click(function () {
                 const page = $(this).data('page');
@@ -174,7 +176,13 @@
             success: function () {
                 console.log(`Player ID = ${playerId} is deleted`);
                 loadPlayers(currentPage, currentPageSize);
-                // renderPagination(currentPage, currentPageSize);
+                getTotalCount().then(function (totalCount) {
+                    const totalPages = Math.ceil(totalCount / currentPageSize);
+                    if (totalPages < currentTotalPages) {
+                        loadPlayers(currentPage - 1, currentPageSize);
+                        renderPagination(currentPageSize);
+                    }
+                })
             },
             error: function (jqXHR, textStatus, errorThrown) {
                 console.error('Error when deleting player: ', textStatus, errorThrown);
