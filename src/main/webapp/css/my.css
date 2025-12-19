@@ -66,12 +66,13 @@ th {
 }
 
 .edit-field:focus,
-.edit-field select:focus {
+.edit-field select:focus,
+#create-player-form input:focus,
+#create-player-form select:focus {
     outline: none;
     border-color: #007bff;
     box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
 }
-
 
 .pgn-container {
     display: flex;
@@ -98,3 +99,67 @@ th {
     font-weight: bold;
     color: darkred;
 }
+
+hr {
+    margin: 30px 0 20px;
+    border: none;
+    border-top: 1px solid #ccc;
+}
+
+#create-player-form {
+    max-width: 420px;
+    padding: 16px 20px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    background-color: #fafafa;
+}
+
+#create-player-form h2 {
+    margin-bottom: 12px;
+}
+
+#create-player-form > div {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+#create-player-form label {
+    flex: 0 0 130px;
+    font-weight: 600;
+    font-size: 16px;
+}
+
+#create-player-form input,
+#create-player-form select {
+    flex: 1;
+    padding: 6px 8px;
+    font-size: 14px;
+    border: 1px solid #bbb;
+    border-radius: 4px;
+}
+
+#create-player-btn {
+    margin-top: 14px;
+    padding: 8px 0;
+    width: 100%;
+    font-size: 15px;
+    font-weight: 600;
+    color: #fff;
+    background-color: #4a90e2;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+#create-player-btn:hover {
+    background-color: #357ab8;
+}
+
+#create-player-btn:active {
+    background-color: #2c6396;
+}
+
+
