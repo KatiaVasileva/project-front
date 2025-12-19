@@ -86,7 +86,7 @@
         </select>
     </div>
 
-    <button id="create-player-btn">Save</button>
+    <button type="button" id="create-player-btn">Save</button>
 </form>
 
 <script>
@@ -94,8 +94,25 @@
     let currentPageSize = 3;
     let currentTotalPages = 0;
 
-    const RACES = ['HUMAN','DWARF','ELF','GIANT','ORC','TROLL','HOBBIT'];
-    const PROFESSIONS = ['WARRIOR','ROGUE','SORCERER','CLERIC','PALADIN','NAZGUL','WARLOCK','DRUID'];
+    const RACES = ['HUMAN', 'DWARF', 'ELF', 'GIANT', 'ORC', 'TROLL', 'HOBBIT'];
+    const PROFESSIONS = ['WARRIOR', 'ROGUE', 'SORCERER', 'CLERIC', 'PALADIN', 'NAZGUL', 'WARLOCK', 'DRUID'];
+
+    $(document).ready(function () {
+        fillSelect('#create-race', RACES);
+        fillSelect('#create-profession', PROFESSIONS);
+
+        const $itemsPerPage = $('#items-per-page');
+
+        $itemsPerPage.val(currentPageSize);
+        loadPlayers(0, currentPageSize);
+        renderPagination(currentPageSize);
+
+        $itemsPerPage.on('change', function () {
+            currentPageSize = +this.value;
+            loadPlayers(0, currentPageSize);
+            renderPagination(currentPageSize);
+        });
+    });
 
     function loadPlayers(pageNumber, pageSize) {
         currentPage = pageNumber;
@@ -151,40 +168,6 @@
             });
     }
 
-    $('#main-table')
-        .on('click', '.edit-icon', function () {
-            const $btn = $(this);
-            const $row = $btn.closest('tr');
-            const action = $btn.data('action');
-
-            if (action === 'edit') {
-                enableEditMode($row);
-            } else if (action === 'save') {
-                savePlayer($row);
-            }
-        })
-        .on('click', '.delete-icon', function () {
-        const playerId = $(this).data('player-id');
-        deletePlayer(playerId, currentPage);
-    })
-
-    $(document).ready(function () {
-        fillSelect('#create-race', RACES);
-        fillSelect('#create-profession', PROFESSIONS);
-
-        const $itemsPerPage = $('#items-per-page');
-
-        $itemsPerPage.val(currentPageSize);
-        loadPlayers(0, currentPageSize);
-        renderPagination(currentPageSize);
-
-        $itemsPerPage.on('change', function () {
-            currentPageSize = +this.value;
-            loadPlayers(0, currentPageSize);
-            renderPagination(currentPageSize);
-        });
-    });
-
     function getTotalCount() {
         return $.get('rest/players/count')
             .then(function (count) {
@@ -220,6 +203,87 @@
             })
         })
     }
+
+    $('#main-table')
+        .on('click', '.edit-icon', function () {
+            const $btn = $(this);
+            const $row = $btn.closest('tr');
+            const action = $btn.data('action');
+
+            if (action === 'edit') {
+                enableEditMode($row);
+            } else if (action === 'save') {
+                savePlayer($row);
+            }
+        })
+        .on('click', '.delete-icon', function () {
+            const playerId = $(this).data('player-id');
+            deletePlayer(playerId, currentPage);
+        })
+
+    function enableEditMode($row) {
+        if ($row.data('editing')) return;
+
+        $row.data('editing', true);
+        $row.find('.delete-icon').hide();
+
+        const $btn = $row.find('.edit-icon');
+        $btn
+            .attr('src', '/img/save.png')
+            .attr('alt', 'save')
+            .data('action', 'save');
+
+        $row.find('td:eq(1)').html(`<input value="${$row.find('td:eq(1)').text()}" class="edit-field">`);
+        $row.find('td:eq(2)').html(`<input value="${$row.find('td:eq(2)').text()}" class="edit-field">`);
+
+        $row.find('td:eq(3)').html(makeSelect(RACES, $row.find('td:eq(3)').text()));
+        $row.find('td:eq(4)').html(makeSelect(PROFESSIONS, $row.find('td:eq(4)').text()));
+
+        const banned = $row.find('td:eq(7)').text() === 'Yes';
+        $row.find('td:eq(7)').html(`
+        <select class="edit-field">
+            <option value="false" ${!banned ? 'selected' : ''}>No</option>
+            <option value="true" ${banned ? 'selected' : ''}>Yes</option>
+        </select>`);
+    }
+
+    $('#create-player-btn').on('click', function () {
+        const birthdayStr = $('#create-birthday').val();
+        const birthday = new Date(birthdayStr).getTime();
+
+        const newPlayer = {
+            name: $('#create-name').val().trim(),
+            title: $('#create-title').val().trim(),
+            race: $('#create-race').val(),
+            profession: $('#create-profession').val(),
+            level: Number($('#create-level').val()),
+            birthday: birthday,
+            banned: $('#create-banned').val() === 'true'
+        }
+
+        if (!newPlayer.name || !newPlayer.title || isNaN(newPlayer.level)
+            || newPlayer.level < 0 || newPlayer.level > 100 || newPlayer.birthday < 0) {
+            alert('Invalid input data');
+            return;
+        }
+
+        $.ajax({
+            url: '/rest/players',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(newPlayer),
+            success: function () {
+                console.log(`Player is created`);
+                clearCreateForm();
+                loadPlayers(currentPage, currentPageSize);
+                alert('Player is successfully created');
+            },
+            error: function (xhr) {
+                console.error(xhr.responseText);
+                alert('Invalid data or empty fields');
+            }
+        })
+    });
 
     function savePlayer($row) {
         const id = $row.attr('id').split('-')[1];
@@ -267,32 +331,6 @@
         })
     }
 
-    function enableEditMode($row) {
-        if ($row.data('editing')) return;
-
-        $row.data('editing', true);
-        $row.find('.delete-icon').hide();
-
-        const $btn = $row.find('.edit-icon');
-        $btn
-            .attr('src', '/img/save.png')
-            .attr('alt', 'save')
-            .data('action', 'save');
-
-        $row.find('td:eq(1)').html(`<input value="${$row.find('td:eq(1)').text()}" class="edit-field">`);
-        $row.find('td:eq(2)').html(`<input value="${$row.find('td:eq(2)').text()}" class="edit-field">`);
-
-        $row.find('td:eq(3)').html(makeSelect(RACES, $row.find('td:eq(3)').text()));
-        $row.find('td:eq(4)').html(makeSelect(PROFESSIONS, $row.find('td:eq(4)').text()));
-
-        const banned = $row.find('td:eq(7)').text() === 'Yes';
-        $row.find('td:eq(7)').html(`
-        <select class="edit-field">
-            <option value="false" ${!banned ? 'selected' : ''}>No</option>
-            <option value="true" ${banned ? 'selected' : ''}>Yes</option>
-        </select>`);
-    }
-
     function makeSelect(options, selected) {
         return `
         <select class="edit-field">
@@ -305,6 +343,11 @@
     function fillSelect(selector, values) {
         const $select = $(selector);
         values.forEach(v => $select.append(`<option value="${v}">${v}</option>`));
+    }
+
+    function clearCreateForm() {
+        $('#create-player-form input').val('');
+        $('#create-banned').val('false');
     }
 
 </script>
