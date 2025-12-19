@@ -45,6 +45,9 @@
 </div>
 
 <script>
+    let currentPage = 0;
+    let currentPageSize = 3;
+
     /**
      * @typedef {Object} Player
      * @property {number} id
@@ -57,6 +60,9 @@
      * @property {number} level
      */
     function loadPlayers(pageNumber, pageSize) {
+        currentPage = pageNumber;
+        currentPageSize = pageSize;
+
         $.get('/rest/players', {pageNumber: pageNumber, pageSize: pageSize})
             .done(function (players) {
                 const $tbody = $('#main-table tbody');
@@ -100,11 +106,6 @@
 
                     $tbody.append($tr);
                 });
-
-                $('.delete-icon').click(function () {
-                    const playerId = $(this).data('player-id');
-                    deletePlayer(playerId, pageNumber, pageSize);
-                })
             })
             .fail(function (jqXHR, textStatus, errorThrown) {
                 console.error('Error when loading players:', textStatus, errorThrown);
@@ -112,11 +113,23 @@
             });
     }
 
+    $('#main-table').on('click', '.delete-icon', function () {
+        const playerId = $(this).data('player-id');
+        deletePlayer(playerId);
+    })
+
     $(document).ready(function () {
-        const initialPageSize = 3;
-        loadPlayers(0, initialPageSize);
-        renderPagination(1, initialPageSize);
-        $('#items-per-page').val(initialPageSize);
+        const $itemsPerPage = $('#items-per-page');
+
+        $itemsPerPage.val(currentPageSize);
+        loadPlayers(0, currentPageSize);
+        renderPagination(currentPageSize);
+
+        $itemsPerPage.on('change', function () {
+            currentPageSize = +this.value;
+            loadPlayers(0, currentPageSize);
+            renderPagination(currentPageSize);
+        });
     });
 
     function getTotalCount() {
@@ -131,13 +144,14 @@
             });
     }
 
-    function renderPagination(currentPage, pageSize) {
+    function renderPagination(pageSize) {
         getTotalCount().then(function (totalCount) {
             const totalPages = Math.ceil(totalCount / pageSize);
             const $pagination = $('#pgn');
             $pagination.empty();
 
             for (let i = 1; i <= totalPages; i++) {
+                $('.page-btn[data-page="1"]').addClass('active');
                 const button = `<button class="page-btn" data-page="${i}">${i}</button>`;
                 $pagination.append(button);
             }
@@ -153,20 +167,14 @@
         })
     }
 
-    $('#items-per-page').change(function () {
-        const pageSize = $(this).val();
-        loadPlayers(0, pageSize);
-        renderPagination(1, pageSize);
-    })
-
-    function deletePlayer(playerId, pageNumber, pageSize) {
+    function deletePlayer(playerId) {
         $.ajax({
             url: `/rest/players/${playerId}`,
             type: 'DELETE',
             success: function () {
                 console.log(`Player ID = ${playerId} is deleted`);
-                loadPlayers(pageNumber, pageSize);
-                renderPagination(pageNumber, pageSize);
+                loadPlayers(currentPage, currentPageSize);
+                // renderPagination(currentPage, currentPageSize);
             },
             error: function (jqXHR, textStatus, errorThrown) {
                 console.error('Error when deleting player: ', textStatus, errorThrown);
@@ -175,9 +183,7 @@
         })
     }
 
-
 </script>
-
 
 </body>
 </html>
