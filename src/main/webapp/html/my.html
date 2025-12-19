@@ -52,17 +52,6 @@
     const RACES = ['HUMAN','DWARF','ELF','GIANT','ORC','TROLL','HOBBIT'];
     const PROFESSIONS = ['WARRIOR','ROGUE','SORCERER','CLERIC','PALADIN','NAZGUL','WARLOCK','DRUID'];
 
-    /**
-     * @typedef {Object} Player
-     * @property {number} id
-     * @property {string} name
-     * @property {string} title
-     * @property {string} race
-     * @property {string} profession
-     * @property {string} birthday
-     * @property {boolean} banned
-     * @property {number} level
-     */
     function loadPlayers(pageNumber, pageSize) {
         currentPage = pageNumber;
         currentPageSize = pageSize;
@@ -242,15 +231,15 @@
             .attr('alt', 'save')
             .data('action', 'save');
 
-        $row.find('td:eq(1)').html(`<input value="${$row.find('td:eq(1)').text()}">`);
-        $row.find('td:eq(2)').html(`<input value="${$row.find('td:eq(2)').text()}">`);
+        $row.find('td:eq(1)').html(`<input value="${$row.find('td:eq(1)').text()}" class="edit-field">`);
+        $row.find('td:eq(2)').html(`<input value="${$row.find('td:eq(2)').text()}" class="edit-field">`);
 
         $row.find('td:eq(3)').html(makeSelect(RACES, $row.find('td:eq(3)').text()));
         $row.find('td:eq(4)').html(makeSelect(PROFESSIONS, $row.find('td:eq(4)').text()));
 
         const banned = $row.find('td:eq(7)').text() === 'Yes';
         $row.find('td:eq(7)').html(`
-        <select>
+        <select class="edit-field">
             <option value="false" ${!banned ? 'selected' : ''}>No</option>
             <option value="true" ${banned ? 'selected' : ''}>Yes</option>
         </select>`);
@@ -258,7 +247,7 @@
 
     function makeSelect(options, selected) {
         return `
-        <select>
+        <select class="edit-field">
             ${options.map(o =>
             `<option ${o === selected ? 'selected' : ''}>${o}</option>`
         ).join('')}
