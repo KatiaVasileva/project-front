@@ -24,6 +24,7 @@ table {
     width: 100%;
     border-collapse: collapse;
     margin-top: 20px;
+    table-layout: fixed;
 }
 
 th, td {
@@ -35,10 +36,6 @@ th, td {
 th {
     background-color: #f2f2f2;
 }
-
-/*tr:nth-child(even) {*/
-/*    background-color: #f9f9f9;*/
-/*}*/
 
 .table-img {
     text-align: center;
@@ -118,7 +115,7 @@ hr {
     margin-bottom: 12px;
 }
 
-#create-player-form > div {
+.create-player-field {
     display: flex;
     justify-content: flex-start;
     align-items: center;
@@ -160,6 +157,31 @@ hr {
 
 #create-player-btn:active {
     background-color: #2c6396;
+}
+
+.error-message {
+    display: none;
+    margin-top: 12px;
+    padding: 10px 12px;
+    border: 1px solid #e44;
+    background-color: #ffecec;
+    color: #b00020;
+    border-radius: 5px;
+    font-size: 14px;
+    text-align: center;
+}
+
+
+input.invalid,
+select.invalid {
+    border-color: #e44;
+    background-color: #fff5f5;
+}
+
+input.invalid:focus,
+select.invalid:focus {
+    outline: none;
+    box-shadow: 0 0 0 1px rgba(228, 68, 68, 0.4);
 }
 
 

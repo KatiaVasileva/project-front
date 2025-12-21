@@ -49,36 +49,37 @@
 <h2>Create new account:</h2>
 
 <form id="create-player-form">
-    <div>
+    <div class="create-player-field">
         <label for="create-name">Name:</label>
         <input type="text" id="create-name" maxlength="12">
     </div>
 
-    <div>
+    <div class="create-player-field">
         <label for="create-title">Title:</label>
         <input type="text" id="create-title" maxlength="30">
     </div>
 
-    <div>
+    <div class="create-player-field">
         <label for="create-race">Race:</label>
         <select id="create-race"></select>
     </div>
 
-    <div>
+    <div class="create-player-field">
         <label for="create-profession">Profession:</label>
         <select id="create-profession"></select>
     </div>
 
-    <div>
+    <div class="create-player-field">
         <label for="create-level">Level:</label>
-        <input type="number" id="create-level" min="0" max="100">
-    </div>
-    <div>
-        <label for="create-birthday">Birthday:</label>
-        <input type="date" id="create-birthday">
+        <input type="number" id="create-level" min="0" max="100" placeholder="0">
     </div>
 
-    <div>
+    <div class="create-player-field">
+        <label for="create-birthday">Birthday:</label>
+        <input type="date" id="create-birthday" min="1900-01-01" max="2025-01-01">
+    </div>
+
+    <div class="create-player-field">
         <label for="create-banned">Banned:</label>
         <select id="create-banned">
             <option value="false">No</option>
@@ -87,6 +88,8 @@
     </div>
 
     <button type="button" id="create-player-btn">Save</button>
+
+    <div id="create-error" class="error-message"></div>
 </form>
 
 <script>
@@ -117,6 +120,8 @@
     function loadPlayers(pageNumber, pageSize) {
         currentPage = pageNumber;
         currentPageSize = pageSize;
+
+        clearCreateError();
 
         $.get('/rest/players', {pageNumber: pageNumber, pageSize: pageSize})
             .done(function (players) {
@@ -184,25 +189,27 @@
         getTotalCount().then(function (totalCount) {
             const totalPages = Math.ceil(totalCount / pageSize);
             currentTotalPages = totalPages;
-            const $pagination = $('#pgn');
-            $pagination.empty();
+            const $pagination = $('#pgn').empty();
 
             for (let i = 1; i <= totalPages; i++) {
                 $('.page-btn[data-page="1"]').addClass('active');
-                const button = `<button class="page-btn" data-page="${i}">${i}</button>`;
-                $pagination.append(button);
+                $pagination.append(`<button class="page-btn" data-page="${i}">${i}</button>`);
             }
 
-            $('.page-btn[data-page="' + (currentPage + 1) + '"]').addClass('active');
-
-            $('.page-btn').click(function () {
-                const page = $(this).data('page');
-                loadPlayers(page - 1, pageSize);
-                $('.page-btn').removeClass('active');
-                $(this).addClass('active');
-            })
+            $('.page-btn')
+                .removeClass('active')
+                .filter(`[data-page="${currentPage + 1}"]`)
+                .addClass('active');
         })
     }
+
+    $('#pgn')
+        .on('click', '.page-btn', function () {
+            currentPage = $(this).data('page') - 1;
+            loadPlayers(currentPage, currentPageSize);
+            $('.page-btn').removeClass('active');
+            $(this).addClass('active');
+        });
 
     $('#main-table')
         .on('click', '.edit-icon', function () {
@@ -248,24 +255,54 @@
     }
 
     $('#create-player-btn').on('click', function () {
+        clearInvalid();
+        clearCreateError();
+
+        const name = $('#create-name').val().trim();
+        const title = $('#create-title').val().trim();
+        const race = $('#create-race').val();
+        const profession = $('#create-profession').val();
+        const level = Number($('#create-level').val());
         const birthdayStr = $('#create-birthday').val();
         const birthday = new Date(birthdayStr).getTime();
+        const banned = $('#create-banned').val() === 'true';
 
-        const newPlayer = {
-            name: $('#create-name').val().trim(),
-            title: $('#create-title').val().trim(),
-            race: $('#create-race').val(),
-            profession: $('#create-profession').val(),
-            level: Number($('#create-level').val()),
-            birthday: birthday,
-            banned: $('#create-banned').val() === 'true'
+        let hasError = false;
+
+        if (!name || name.length > 12) {
+            markInvalid('#create-name');
+            hasError = true;
         }
 
-        if (!newPlayer.name || !newPlayer.title || isNaN(newPlayer.level)
-            || newPlayer.level < 0 || newPlayer.level > 100 || newPlayer.birthday < 0) {
-            alert('Invalid input data');
+        if (!title || title.length > 30) {
+            markInvalid('#create-title');
+            hasError = true;
+        }
+
+        if (isNaN(level) || level < 0 || level > 100) {
+            markInvalid('#create-level');
+            hasError = true;
+        }
+
+        if (!birthdayStr || isNaN(birthday) || birthday < 0) {
+            markInvalid('#create-birthday');
+            hasError = true;
+        }
+
+        if (hasError) {
+            showCreateError('Please correct highlighted fields');
             return;
         }
+
+        const newPlayer = {
+            name,
+            title,
+            race,
+            profession,
+            level,
+            birthday,
+            banned
+        };
 
         $.ajax({
             url: '/rest/players',
@@ -273,17 +310,34 @@
             contentType: 'application/json',
             data: JSON.stringify(newPlayer),
             success: function () {
-                console.log(`Player is created`);
+                getTotalCount().then(function (totalCount) {
+                    console.log(`Player is created`);
+                    const totalPages = Math.ceil(totalCount / currentPageSize);
+                    currentPage = totalPages > 0 ? totalPages - 1 : 0;
+                    loadPlayers(currentPage, currentPageSize);
+                    renderPagination(currentPageSize);
+                    alert('Player is successfully created');
+                });
                 clearCreateForm();
-                loadPlayers(currentPage, currentPageSize);
-                alert('Player is successfully created');
+                clearCreateError();
             },
             error: function (xhr) {
-                console.error(xhr.responseText);
-                alert('Invalid data or empty fields');
+                let message = 'Failed to create player';
+                if (xhr.status === 400 && xhr.responseText) {
+                    message = xhr.responseText;
+                }
+                showCreateError(message);
             }
         })
     });
+
+    const $createForm = $('#create-player-form');
+
+    $createForm
+        .on('input change', 'input, select', function () {
+            $(this).removeClass('invalid');
+            clearCreateError();
+        });
 
     function savePlayer($row) {
         const id = $row.attr('id').split('-')[1];
@@ -304,6 +358,7 @@
             data: JSON.stringify(updatedPlayer),
             success: function () {
                 console.log(`Player ID=${id} is updated`);
+                $row.removeData('editing');
                 loadPlayers(currentPage, currentPageSize)
             }
         });
@@ -314,14 +369,16 @@
             url: `/rest/players/${playerId}`,
             type: 'DELETE',
             success: function () {
-                console.log(`Player ID = ${playerId} is deleted`);
-                loadPlayers(currentPage, currentPageSize);
                 getTotalCount().then(function (totalCount) {
-                    const totalPages = Math.ceil(totalCount / currentPageSize);
-                    if (totalPages < currentTotalPages) {
-                        loadPlayers(currentPage - 1, currentPageSize);
-                        renderPagination(currentPageSize);
+                    const newTotalPages = Math.ceil(totalCount / currentPageSize);
+                    if (newTotalPages === 0) {
+                        currentPage = 0;
+                    } else if (currentPage >= newTotalPages) {
+                        currentPage = newTotalPages - 1;
                     }
+                    console.log(`Player ID = ${playerId} is deleted`);
+                    loadPlayers(currentPage, currentPageSize);
+                    renderPagination(currentPageSize);
                 })
             },
             error: function (jqXHR, textStatus, errorThrown) {
@@ -348,6 +405,27 @@
     function clearCreateForm() {
         $('#create-player-form input').val('');
         $('#create-banned').val('false');
+    }
+
+    function showCreateError(message) {
+        $('#create-error')
+            .text(message)
+            .show();
+    }
+
+    function clearCreateError() {
+        $('#create-error')
+            .hide()
+            .text('');
+    }
+
+    function markInvalid(selector) {
+        $(selector).addClass('invalid');
+    }
+
+    function clearInvalid() {
+        $('#create-player-form input, #create-player-form select')
+            .removeClass('invalid');
     }
 
 </script>
