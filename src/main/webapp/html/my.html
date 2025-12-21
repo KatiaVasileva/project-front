@@ -95,7 +95,6 @@
 <script>
     let currentPage = 0;
     let currentPageSize = 3;
-    let currentTotalPages = 0;
 
     const RACES = ['HUMAN', 'DWARF', 'ELF', 'GIANT', 'ORC', 'TROLL', 'HOBBIT'];
     const PROFESSIONS = ['WARRIOR', 'ROGUE', 'SORCERER', 'CLERIC', 'PALADIN', 'NAZGUL', 'WARLOCK', 'DRUID'];
@@ -188,7 +187,6 @@
     function renderPagination(pageSize) {
         getTotalCount().then(function (totalCount) {
             const totalPages = Math.ceil(totalCount / pageSize);
-            currentTotalPages = totalPages;
             const $pagination = $('#pgn').empty();
 
             for (let i = 1; i <= totalPages; i++) {
