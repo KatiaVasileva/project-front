@@ -93,6 +93,8 @@
 </form>
 
 <script>
+    const API_BASE = window.location.origin;
+
     let currentPage = 0;
     let currentPageSize = 3;
 
@@ -122,7 +124,7 @@
 
         clearCreateError();
 
-        $.get('rest/players', {pageNumber: pageNumber, pageSize: pageSize})
+        $.get(`${API_BASE}/rest/players`, {pageNumber: pageNumber, pageSize: pageSize})
             .done(function (players) {
                 const $tbody = $('#main-table tbody');
                 $tbody.empty();
@@ -145,7 +147,7 @@
 
                     const $editBtn = $('<td>').addClass('table-img');
                     $editBtn.append($('<img>').attr({
-                        src: '/img/edit.png',
+                        src: 'img/edit.png',
                         alt: 'edit',
                         class: 'icon edit-icon',
                         'data-player-id': player.id,
@@ -155,7 +157,7 @@
 
                     const $deleteBtn = $('<td>').addClass('table-img');
                     $deleteBtn.append($('<img>').attr({
-                        src: '/img/delete.png',
+                        src: 'img/delete.png',
                         alt: 'delete',
                         class: 'icon delete-icon',
                         'data-player-id': player.id,
@@ -173,7 +175,7 @@
     }
 
     function getTotalCount() {
-        return $.get('rest/players/count')
+        return $.get(`${API_BASE}/rest/players/count`)
             .then(function (count) {
                 return count;
             })
@@ -234,7 +236,7 @@
 
         const $btn = $row.find('.edit-icon');
         $btn
-            .attr('src', '/img/save.png')
+            .attr('src', 'img/save.png')
             .attr('alt', 'save')
             .data('action', 'save');
 
@@ -303,7 +305,7 @@
         };
 
         $.ajax({
-            url: 'rest/players',
+            url: `${API_BASE}/rest/players`,
             type: 'POST',
             contentType: 'application/json',
             data: JSON.stringify(newPlayer),
@@ -350,7 +352,7 @@
         };
 
         $.ajax({
-            url: `rest/players/${id}`,
+            url: `${API_BASE}/rest/players/${id}`,
             type: 'POST',
             contentType: 'application/json',
             data: JSON.stringify(updatedPlayer),
@@ -364,7 +366,7 @@
 
     function deletePlayer(playerId) {
         $.ajax({
-            url: `rest/players/${playerId}`,
+            url: `${API_BASE}/rest/players/${playerId}`,
             type: 'DELETE',
             success: function () {
                 getTotalCount().then(function (totalCount) {
