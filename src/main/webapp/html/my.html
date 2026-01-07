@@ -122,7 +122,7 @@
 
         clearCreateError();
 
-        $.get('/rest/players', {pageNumber: pageNumber, pageSize: pageSize})
+        $.get('rest/players', {pageNumber: pageNumber, pageSize: pageSize})
             .done(function (players) {
                 const $tbody = $('#main-table tbody');
                 $tbody.empty();
@@ -303,7 +303,7 @@
         };
 
         $.ajax({
-            url: '/rest/players',
+            url: 'rest/players',
             type: 'POST',
             contentType: 'application/json',
             data: JSON.stringify(newPlayer),
@@ -350,7 +350,7 @@
         };
 
         $.ajax({
-            url: `/rest/players/${id}`,
+            url: `rest/players/${id}`,
             type: 'POST',
             contentType: 'application/json',
             data: JSON.stringify(updatedPlayer),
@@ -364,7 +364,7 @@
 
     function deletePlayer(playerId) {
         $.ajax({
-            url: `/rest/players/${playerId}`,
+            url: `rest/players/${playerId}`,
             type: 'DELETE',
             success: function () {
                 getTotalCount().then(function (totalCount) {
